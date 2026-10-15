@@ -53,19 +53,19 @@ export async function onRequestPost({ request, env }) {
     }
 
     // 2순위: Cloudflare Workers AI (무료 한도)
-    const models = body.model && String(body.model).startsWith("@cf/") ? [String(body.model)] : [env.CF_MODEL || "@cf/google/gemma-4-26b-a4b-it", "@cf/meta/llama-3.3-70b-instruct-fp8-fast"];
-    const errs = [];
+    const models = [env.CF_MODEL || "@cf/qwen/qwen3-30b-a3b-fp8", "@cf/meta/llama-3.3-70b-instruct-fp8-fast"];
     let answer = "", used = "";
     for (const m of models) {
       try {
         const out = await env.AI.run(m, { messages, max_tokens: 900, temperature: 0.5 });
         answer = out?.response || out?.choices?.[0]?.message?.content || "";
         if (typeof answer !== "string") answer = JSON.stringify(answer);
+        answer = answer.replace(/<think>[\s\S]*?<\/think>/g, "").replace(/\*\*/g, "").replace(/^#+\s*/gm, "").trim();
         if (answer) { used = m; break; }
-      } catch (e) { errs.push(m + ": " + String(e?.message || e).slice(0, 200)); }
+      } catch (e) { /* 다음 모델로 */ }
     }
     if (!answer) {
-      return new Response(JSON.stringify({ error: "AI가 잠시 바쁩니다. 조금 뒤 다시 시도해 주세요.", errs }), { status: 503, headers });
+      return new Response(JSON.stringify({ error: "AI가 잠시 바쁩니다. 조금 뒤 다시 시도해 주세요." }), { status: 503, headers });
     }
     return new Response(JSON.stringify({ answer, engine: used }), { headers });
   } catch (e) {
