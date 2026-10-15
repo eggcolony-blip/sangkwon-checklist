@@ -15,7 +15,7 @@ const SYSTEM = `당신은 '부자창업스쿨' 이홍규 대표의 관점으로 
 export async function onRequestPost({ request, env }) {
   const headers = { "Content-Type": "application/json; charset=utf-8" };
   try {
-    if (!env.OPENAI_API_KEY) {
+    if (!env.OPENAI_API_KEY && !env.AI) {
       return new Response(JSON.stringify({ error: "AI 설정이 아직 완료되지 않았습니다." }), { status: 500, headers });
     }
     const body = await request.json().catch(() => ({}));
@@ -25,26 +25,32 @@ export async function onRequestPost({ request, env }) {
       return new Response(JSON.stringify({ error: "질문을 입력해 주세요." }), { status: 400, headers });
     }
 
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: env.OPENAI_MODEL || "gpt-4o-mini",
-        max_tokens: 700,
-        temperature: 0.6,
-        messages: [
-          { role: "system", content: SYSTEM },
-          ...(context ? [{ role: "system", content: `사용자 체크리스트 결과: ${context}` }] : []),
-          { role: "user", content: question }
-        ]
-      })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      return new Response(JSON.stringify({ error: "AI 응답에 실패했습니다. 잠시 후 다시 시도해 주세요.", detail: data?.error?.code }), { status: 502, headers });
+    const messages = [
+      { role: "system", content: SYSTEM },
+      ...(context ? [{ role: "system", content: `사용자 체크리스트 결과: ${context}` }] : []),
+      { role: "user", content: question }
+    ];
+
+    // 1순위: OpenAI 키가 있으면 OpenAI 사용
+    if (env.OPENAI_API_KEY) {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: env.OPENAI_MODEL || "gpt-4o-mini", max_tokens: 700, temperature: 0.6, messages })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        return new Response(JSON.stringify({ answer: data.choices?.[0]?.message?.content || "", engine: "openai" }), { headers });
+      }
+      if (!env.AI) {
+        return new Response(JSON.stringify({ error: "AI 응답에 실패했습니다. 잠시 후 다시 시도해 주세요." }), { status: 502, headers });
+      }
     }
-    const answer = data.choices?.[0]?.message?.content || "";
-    return new Response(JSON.stringify({ answer }), { headers });
+
+    // 2순위: Cloudflare Workers AI (무료 한도)
+    const out = await env.AI.run(env.CF_MODEL || "@cf/meta/llama-3.3-70b-instruct-fp8-fast", { messages, max_tokens: 700, temperature: 0.6 });
+    const answer = out?.response || "";
+    return new Response(JSON.stringify({ answer, engine: "workers-ai" }), { headers });
   } catch (e) {
     return new Response(JSON.stringify({ error: "일시적인 오류가 발생했습니다." }), { status: 500, headers });
   }
