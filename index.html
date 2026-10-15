@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>창업 전 상권 자가진단 체크리스트 | 부자창업스쿨</title>
+<meta name="description" content="점포 계약 전, 20가지 질문으로 내 상권을 점검해 보세요. 점포개발 9년·상권분석 11년차 현장 경험으로 만든 무료 자가진단.">
+<style>
+  :root { --main:#1f6f5c; --bg:#f6f7f5; --card:#fff; --text:#222; --sub:#666; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+  header { background:var(--main); color:#fff; padding:40px 20px; text-align:center; }
+  header h1 { margin:0 0 8px; font-size:1.7rem; }
+  header p { margin:0; opacity:.9; }
+  main { max-width:760px; margin:0 auto; padding:24px 16px 60px; }
+  .card { background:var(--card); border-radius:14px; padding:20px 22px; margin-bottom:18px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .card h2 { margin:0 0 4px; font-size:1.15rem; color:var(--main); }
+  .card .desc { margin:0 0 12px; color:var(--sub); font-size:.9rem; }
+  label { display:flex; gap:10px; align-items:flex-start; padding:9px 0; border-top:1px solid #eee; cursor:pointer; }
+  label:first-of-type { border-top:none; }
+  input[type=checkbox] { width:20px; height:20px; margin-top:2px; accent-color:var(--main); flex-shrink:0; }
+  .progress { position:sticky; top:0; background:#fff; padding:12px 16px; border-radius:0 0 12px 12px; box-shadow:0 2px 6px rgba(0,0,0,.08); margin-bottom:18px; z-index:5; }
+  .bar { height:10px; background:#e4e8e6; border-radius:5px; overflow:hidden; margin-top:6px; }
+  .bar div { height:100%; width:0; background:var(--main); transition:width .3s; }
+  button { width:100%; padding:16px; font-size:1.05rem; font-weight:700; border:none; border-radius:12px; background:var(--main); color:#fff; cursor:pointer; }
+  button:hover { opacity:.92; }
+  #result { display:none; }
+  #result .grade { font-size:2.2rem; font-weight:800; color:var(--main); margin:4px 0; }
+  #result ul { padding-left:20px; }
+  footer { text-align:center; color:var(--sub); font-size:.85rem; padding:20px; }
+  footer a { color:var(--main); }
+</style>
+</head>
+<body>
+<header>
+  <h1>창업 전 상권 자가진단 체크리스트</h1>
+  <p>점포 계약서에 도장 찍기 전, 20가지만 확인해 보세요.</p>
+</header>
+
+<main>
+  <div class="progress">
+    <span id="count">0 / 20 확인</span>
+    <div class="bar"><div id="fill"></div></div>
+  </div>
+
+  <div id="list"></div>
+
+  <button id="check">진단 결과 보기</button>
+
+  <div class="card" id="result">
+    <h2>진단 결과</h2>
+    <div class="grade" id="grade"></div>
+    <p id="summary"></p>
+    <p><strong>더 확인이 필요한 부분</strong></p>
+    <ul id="weak"></ul>
+  </div>
+</main>
+
+<footer>
+  만든 곳: <a href="https://blog.naver.com/richbizedu" target="_blank">부자창업스쿨</a> · 점포개발 9년, 상권분석 11년차 현장 경험 기반<br>
+  이 체크리스트는 참고용이며, 실제 계약 전에는 현장 조사를 꼭 하시기 바랍니다.
+</footer>
+
+<script>
+const sections = [
+  { title: "1. 배후 수요", desc: "가게를 먹여 살릴 사람이 충분한가", items: [
+    "반경 500m 안 주거 세대 수를 직접 확인했다",
+    "주변 직장인 수와 회사 규모를 알아봤다",
+    "내 업종의 주 고객층(나이, 성별)이 이 동네에 많다",
+    "평일과 주말 유동인구를 각각 현장에서 세어봤다" ]},
+  { title: "2. 동선과 입지", desc: "사람이 가게 앞을 지나가는가", items: [
+    "역, 정류장, 아파트 출입구에서 가게까지 주 동선 위에 있다",
+    "가게가 길 건너편이나 골목 안쪽이 아니라 눈에 잘 띈다",
+    "출근길과 퇴근길 중 내 업종에 맞는 쪽 동선에 있다",
+    "주차나 정차가 가능하다 (필요한 업종인 경우)" ]},
+  { title: "3. 경쟁 환경", desc: "이미 같은 장사를 하는 곳은 어떤가", items: [
+    "반경 300m 안 동종 업종 가게 수를 셌다",
+    "경쟁점의 피크 시간대 손님 수를 직접 봤다",
+    "경쟁점과 다른 나만의 강점이 분명하다",
+    "최근 1~2년 사이 같은 자리에서 폐업한 가게 이력을 확인했다" ]},
+  { title: "4. 점포 조건", desc: "자리 자체에 문제는 없는가", items: [
+    "보증금, 월세, 권리금이 예상 매출 대비 적정하다 (월세는 매출의 10% 안팎)",
+    "건축물대장으로 용도와 불법 증축 여부를 확인했다",
+    "전기 용량, 가스, 배기, 급배수가 내 업종에 맞다",
+    "임대차 기간과 갱신 조건을 확인했다" ]},
+  { title: "5. 상권 변화", desc: "앞으로 좋아질 동네인가, 나빠질 동네인가", items: [
+    "주변 재개발, 신규 아파트, 도로 공사 계획을 알아봤다",
+    "대형 상가나 쇼핑몰 입점 예정이 있는지 확인했다",
+    "최근 이 거리에 새로 생긴 가게와 없어진 가게를 비교해 봤다",
+    "낮과 밤, 비 오는 날의 상권 분위기를 모두 봤다" ]}
+];
+
+const list = document.getElementById("list");
+let total = 0;
+sections.forEach((s, si) => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.innerHTML = `<h2>${s.title}</h2><p class="desc">${s.desc}</p>` +
+    s.items.map((it, ii) => `<label><input type="checkbox" data-s="${si}" data-i="${ii}"> <span>${it}</span></label>`).join("");
+  list.appendChild(card);
+  total += s.items.length;
+});
+
+const boxes = () => [...document.querySelectorAll("input[type=checkbox]")];
+function update() {
+  const n = boxes().filter(b => b.checked).length;
+  document.getElementById("count").textContent = `${n} / ${total} 확인`;
+  document.getElementById("fill").style.width = (n / total * 100) + "%";
+}
+list.addEventListener("change", update);
+
+document.getElementById("check").addEventListener("click", () => {
+  const n = boxes().filter(b => b.checked).length;
+  let grade, summary;
+  if (n >= 17) { grade = "준비 완료"; summary = "기본 점검은 충분히 하셨습니다. 이제 숫자(예상 매출, 손익분기점)로 최종 판단하시면 됩니다."; }
+  else if (n >= 12) { grade = "조금 더 확인"; summary = "큰 틀은 보셨지만 빈 곳이 있습니다. 아래 항목을 채우고 계약하셔도 늦지 않습니다."; }
+  else if (n >= 6) { grade = "계약 보류 권장"; summary = "아직 확인 안 된 부분이 많습니다. 이 상태로 계약하면 나중에 고칠 수 없는 문제가 생길 수 있습니다."; }
+  else { grade = "현장 조사부터"; summary = "지금은 상권을 거의 모르는 상태입니다. 최소 3일은 시간대별로 현장을 직접 보시기 바랍니다."; }
+
+  const weak = sections.map((s, si) => {
+    const miss = s.items.filter((_, ii) => !document.querySelector(`input[data-s="${si}"][data-i="${ii}"]`).checked).length;
+    return { title: s.title, miss };
+  }).filter(x => x.miss > 0).sort((a, b) => b.miss - a.miss);
+
+  document.getElementById("grade").textContent = `${grade} (${n}/${total})`;
+  document.getElementById("summary").textContent = summary;
+  document.getElementById("weak").innerHTML = weak.length
+    ? weak.map(w => `<li>${w.title}: ${w.miss}개 미확인</li>`).join("")
+    : "<li>모든 항목을 확인하셨습니다.</li>";
+  const r = document.getElementById("result");
+  r.style.display = "block";
+  r.scrollIntoView({ behavior: "smooth" });
+});
+</script>
+</body>
+</html>
